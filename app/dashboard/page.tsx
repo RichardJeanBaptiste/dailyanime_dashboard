@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/utils";
 import BulkImporter from "../components/BulkImporter";
+import CharacterEditor from "../components/CharacterEditor";
 import { QuoteProvider } from "../components/QuoteContext";
 // import { useCharacters } from "./lib";
-//import BulkQuoteImporter from "./BulkQuoteImporter";
 // import QuoteEditor from "./QuoteEditor";
-// import CharacterEditor from "./CharacterEditor";
+
 
 const TABS = [
   { id: "add", label: "Add quotes" },
@@ -77,7 +77,7 @@ function Workspace({ session }: {session: any}) {
           <main>
             {tab === "add" && <BulkImporter/>}
             {/* {tab === "quotes" && <QuoteEditor characters={characters} />} */}
-            {/* {tab === "characters" && <CharacterEditor characters={characters} reload={reload} />} */}
+            {tab === "characters" && <CharacterEditor/>}
           </main>
         </div>
       </div>
