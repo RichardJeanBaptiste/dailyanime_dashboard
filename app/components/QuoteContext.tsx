@@ -44,7 +44,7 @@ const QP = ({ children }: QuoteProviderProps) => {
 
     const getChars = async () => {
 
-        const { data, error } = await supabase.rpc('get_character_names');
+        const { data, error } = await supabase.rpc('get_characters');
 
         if (error) throw error;
 
