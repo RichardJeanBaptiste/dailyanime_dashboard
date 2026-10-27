@@ -59,7 +59,8 @@ const QP = ({ children }: QuoteProviderProps) => {
             },
             {
                 queryKey: ["characters"],
-                queryFn: getChars
+                queryFn: getChars,
+                refetchOnWindowFocus: false,
             }
         ]
     });

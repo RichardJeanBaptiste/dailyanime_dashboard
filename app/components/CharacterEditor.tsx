@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuoteContext } from "./QuoteContext";
-
+import Link from 'next/link';
+import Image from 'next/image';
 
 
 interface Character {
@@ -12,10 +13,17 @@ interface Character {
     img_links?: Array<string>
 }
 
+interface ImageCardProps {
+    img_link: string,
+    name: string,
+    removeImage: any,
+}
+
 const genericInput = "w-[90%] border border-solid border-black mt-2";
 
+
 const emptyCharacter = {
-    id: 0,
+    id: -1,
     name: 'loading',
     anime: 'loading',
     biography: '',
@@ -23,33 +31,98 @@ const emptyCharacter = {
     img_links: [],
 }
 
+const ImageCard = ({img_link, name, removeImage}: ImageCardProps) =>{
+
+
+    const isValidUrl = (url: string) => {
+        try {
+            const parsedUrl = new URL(url);
+
+            return ["https:", "http:"].includes(parsedUrl.protocol);
+        } catch {
+            return false;
+        }
+    }
+
+    return (
+        <div className="relative bg-blue-50 border border-solid border-red-100 w-[70%] h-[200px]">
+            
+            <button
+                className = "absolute top-2 left-2 z-10 rounded bg-red-600 px-3 py-1 text-white shadow hover:bg-red-700" 
+                onClick={() => removeImage(img_link)}
+            >
+                remove
+            </button>
+
+            <a
+                className = "absolute top-2 right-2 z-10 rounded bg-blue-600 px-3 py-1 text-white shadow hover:bg-blue-700"
+                href={img_link}
+                target="_blank" rel="noopener noreferrer"
+            >
+                Open
+            </a>
+            
+            {isValidUrl(img_link) ? 
+                <Image
+                    src={img_link}
+                    width={500}
+                    height={500}
+                    className="w-full h-full object-cover"
+                    alt={`Picture of ${name}`} 
+                />
+                :
+                <p>Image cant load</p>
+            }
+            
+        </div>
+    )
+}
+
 export default function CharacterEditor(){
 
     const { charQuery } = useQuoteContext();
 
     const [ currentChar, setCurrentChar ] = useState<Character>(emptyCharacter);
+    const [ addImgLink, setAddImgLink ] = useState<string>("");
+
+
+    const first = charQuery?.data?.[0];
 
     useEffect(() => {
+        if (first) setCurrentChar(first);
+    }, [first?.id]); 
 
-        if(charQuery != undefined) {
-            console.log(charQuery.data[0]);
-            setCurrentChar(charQuery.data[0]);
-        }
-    },[charQuery]);
-
-    const changeChar = ({char}:{char: Character}) => {
-        setCurrentChar(char);
+    
+    const handleCharInput = ({val, e}: {val: string, e: any}) => {
+        
+        setCurrentChar((prev) => ({
+            ...prev,
+            [val]: e.target.value,
+        }));
     }
 
+    const removeImage = (img_link: string) => {
+        setCurrentChar((prev) => ({
+            ...prev,
+            img_links: prev.img_links?.filter((x) => x !== img_link),
+        }));
+    };
 
-
-    const ImageCard = ({img_link}: {img_link : string}) =>{
-        return (
-            <div className="bg-blue-50 border border-solid border-red-100 w-[70%] h-[200]">
-                <p>{img_link}</p>
-            </div>
-        )
+    const handleImgInput = (e: any) => {
+        setAddImgLink((prev) => e.target.value);
     }
+
+    const handleAddImgLink = (img_link: string) => {
+
+        setCurrentChar((prev) => ({
+            ...prev,
+            img_links: [...(prev.img_links ?? []), img_link],
+        }));
+
+        setAddImgLink("");
+    };
+
+    
 
     const CharItem = ({char}: {char: Character}) => {
 
@@ -80,8 +153,8 @@ export default function CharacterEditor(){
 
                     {/* Scrollable character list */}
                     <div className="mt-5 flex-1 min-h-0 overflow-y-auto pb-4">
-                        {charQuery?.data?.map((x: Character) => (
-                            <CharItem char={x} key={x.id} />
+                        {charQuery?.data?.map((x: Character, index: number) => (
+                            <CharItem char={x} key={index} />
                         ))}
                     </div>
                 </div>
@@ -108,18 +181,18 @@ export default function CharacterEditor(){
                                 <div className="flex flex-row pb-8 pt-8">
                                     <div className="w-1/2">
                                         <p>Name</p>
-                                        <input className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} type="text" placeholder={currentChar.name}/>
+                                        <input className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} type="text" placeholder={currentChar.name} value={currentChar.name} onChange={(e) => handleCharInput({ val: "name", e })}/>
                                     </div>
                                     
                                     <div className="w-1/2">
                                         <p>Anime</p>
-                                        <input className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} type="text" placeholder={currentChar.anime}/>
+                                        <input className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} type="text" placeholder={currentChar.anime} value={currentChar.anime} onChange={(e) => handleCharInput({ val: "anime", e })}/>
                                     </div>
                                 </div>
                                 
                                 <div className="flex-none w-[100%]  pb-8">
                                     <p>Biography</p>
-                                    <textarea className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} rows={4} placeholder={currentChar.biography}/>
+                                    <textarea className={`${genericInput} rounded-md p-2 focus:border-cyan-500`} rows={4} placeholder={currentChar.biography} value={currentChar.biography} onChange={(e) => handleCharInput({ val: "biography", e })}/>
                                 </div>
                                 
                                 <div className="flex-1 pb-8">
@@ -128,11 +201,17 @@ export default function CharacterEditor(){
                                     <div className="flex w-[95%] flex-row gap-2">
                                         <input
                                             placeholder={currentChar.wiki}
+                                            value={currentChar.wiki}
+                                            onChange={(e) => handleCharInput({ val: "wiki", e })}
                                             className="min-w-0 flex-1 rounded border p-2"
                                         />
-                                        <button className="shrink-0 rounded bg-cyan-600 px-4 py-2 text-white">
+                                        <a
+                                            className="shrink-0 rounded bg-cyan-600 px-4 py-2 text-white"
+                                            href={`${currentChar.wiki}`} 
+                                            target="_blank" rel="noopener noreferrer" 
+                                        >
                                             Open
-                                        </button>
+                                        </a>
                                     </div>
                                 </div>
                                 
@@ -140,17 +219,17 @@ export default function CharacterEditor(){
                                     <p className="text-[24px]">Images</p>
                                     
                                     <div className="grid grid-cols-3 gap-4 mt-3 pb-8">
-                                        <ImageCard img_link="Image 1"/>
-                                        <ImageCard img_link="Image 2"/>
-                                        <ImageCard img_link="Image 3"/>
-                                        <ImageCard img_link="Image 4"/>
-                                        <ImageCard img_link="Image 5"/>
-                                        <ImageCard img_link="Image 6"/>
+                                        
+                                        {currentChar?.img_links?.map((x, index) => {
+                                            return (
+                                                <ImageCard img_link={`${x}`} name={currentChar.name} removeImage={removeImage} key={x}/>
+                                            )
+                                        })}
                                     </div>
                                     
                                     <div className="flex w-[95%] flex-row gap-2">
-                                        <input className="min-w-0 flex-1 rounded border p-2" type="text" placeholder="Add Image Link"/>
-                                        <button className="shrink-0 rounded bg-cyan-600 px-4 py-2 text-white" >Add Image</button>
+                                        <input className="min-w-0 flex-1 rounded border p-2" type="text" placeholder="Add Image Link" onChange={(e) => handleImgInput(e)} value={addImgLink}/>
+                                        <button className="shrink-0 rounded bg-cyan-600 px-4 py-2 text-white" onClick={() => handleAddImgLink(addImgLink)}>Add Image</button>
                                     </div>
                                     
                                 </div>
